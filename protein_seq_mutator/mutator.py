@@ -43,7 +43,7 @@ fasta_seqs = SeqIO.parse(open(in_path),'fasta')
 out_file = open(out_path, "w")
 for fasta in fasta_seqs:
     name, sequence = fasta.id, str(fasta.seq)
-    out_file.write(mutations_string + '_' + name + '\n')
+    out_file.write('>' + mutations_string + '_' + name + '\n')
     mut_seq = mutate(sequence,mutations_string, 'string')
     out_file.write(mut_seq)
 
