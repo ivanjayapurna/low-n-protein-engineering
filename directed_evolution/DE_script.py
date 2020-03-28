@@ -22,8 +22,8 @@ def get_fasta_letters(filename): # given the fasta filename for the wild-type, t
 
 
 def get_SY(): # load the training data, given the filepath to the .txt files that contain training sequences and their corresponding fitness scores
-	S = np.loadtxt('seqs.txt', dtype='str') # S is an array representation of the amino acid sequences, currently stored as the letter-encoding
-	Y = np.loadtxt('fitness.txt',dtype='float') # Y is an array of the fitness scores for training data
+	S = np.loadtxt('inputs/wt_mutants.txt', dtype='str') # S is an array representation of the amino acid sequences, currently stored as the letter-encoding
+	Y = np.loadtxt('inputs/fitness.txt',dtype='float') # Y is an array of the fitness scores for training data
 	S_int = [] # initialize list of training data to add integer representations to
 	for i in range(len(Y)): # iterate through list of training mutants
 		S_int.append(np.array(aas_to_int_seq(S[i]).split(',')).astype(np.int)) # append list of training mutant sequences with their integer representations
@@ -80,7 +80,7 @@ def directed_evolution(s_wt,num_iterations,T): # input = (wild-type sequence, nu
 
 
 
-s_wt = aa_seq_to_int(get_fasta_letters("GAP38373.1.fasta")) # load wild-type sequence (integer representation)
+s_wt = aa_seq_to_int(get_fasta_letters("inputs/GAP38373.1.fasta")) # load wild-type sequence (integer representation)
 y_wt = 0.0 # call corresponding wild-type fitness score
 
 
