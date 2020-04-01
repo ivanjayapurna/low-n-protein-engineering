@@ -184,10 +184,10 @@ def bucketbatchpad(
     # See https://stackoverflow.com/questions/44132307/tf-contrib-data-dataset-repeat-with-shuffle-notice-epoch-end-mixed-epochs
     dataset = dataset.repeat(count=repeat)
     # Apply grouping to bucket and pad
-    grouped_dataset = dataset.group_by_window(
+    grouped_dataset = dataset.apply(tf.contrib.data.group_by_window(
         key_func=lambda seq: smart_length(tf_rank1_tensor_len(seq), bucket_bounds=bounds), # choose a bucket
         reduce_func=lambda key, ds: pad_batch(ds, batch_size, padding=padding, padded_shapes=pad_shape), # apply reduce funtion to pad
-        window_size=window_size)
+        window_size=256))
 
 
         

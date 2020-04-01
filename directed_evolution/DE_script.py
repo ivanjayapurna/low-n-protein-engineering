@@ -3,12 +3,21 @@ import scipy
 import pdb
 import sklearn
 from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import LassoLarsCV
 from data_utils import *
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
+from unirep import babbler1900 as babbler
+import unirep
+from unirep import *
+import data_utils
+import tensorflow as tf
+import jax_unirep
+from jax_unirep import get_reps
+import time
 
-
+from sklearn.model_selection import train_test_split
 
 def get_fasta_letters(filename): # given the fasta filename for the wild-type, turn it into a letter-representation of the amino acid sequence
     with open(filename, 'r') as f:
@@ -20,19 +29,24 @@ def get_fasta_letters(filename): # given the fasta filename for the wild-type, t
                 seq += line.replace("\n","")
     return seq
 
-
 def get_SY(): # load the training data, given the filepath to the .txt files that contain training sequences and their corresponding fitness scores
 	S = np.loadtxt('inputs/wt_mutants.txt', dtype='str') # S is an array representation of the amino acid sequences, currently stored as the letter-encoding
 	Y = np.loadtxt('inputs/fitness.txt',dtype='float') # Y is an array of the fitness scores for training data
-	S_int = [] # initialize list of training data to add integer representations to
-	for i in range(len(Y)): # iterate through list of training mutants
-		S_int.append(np.array(aas_to_int_seq(S[i]).split(',')).astype(np.int)) # append list of training mutant sequences with their integer representations
-	return np.array(S_int), Y # output the training data integer-sequences and their corresponding fitness scores
+	return S, Y # output the training data integer-sequences and their corresponding fitness scores
 
+def shuffle(X,Y):
+  indices = np.random.permutation(np.shape(X)[0])
+  X,Y = X[indices], Y[indices]
+  return X,Y
 
-def eUniRep_placeholder(S): # this is just a placeholder function until we get the function to produce the actual eUniRep representation of training sequences
-	X = (S - 11.5)/5.5 # some arbitrary mathematical transformation of the integer representation of an amino acid sequence
-	return X # return the eUniRep sequence representation vector/vectors
+def get_eUniRep(S): # this is just a placeholder function until we get the function to produce the actual eUniRep representation of training sequences
+	
+	X = []
+	for i in range(S.shape[0]):
+
+		X.append(get_reps(S[i])[0])
+
+	return np.array(X)[:,0,:] # return the eUniRep sequence representation vector/vectors
 
 
 # function for introducing mutations to a given sequence
@@ -53,7 +67,8 @@ def directed_evolution(s_wt,num_iterations,T): # input = (wild-type sequence, nu
 	y_traj = np.zeros((num_iterations,1)) # initialize an array to keep records of the fitness scores for this trajectory
 
 	s = mutate_sequence(s_wt, (np.random.poisson(2) + 1)) # initial mutant sequence for this trajectory, with m = Poisson(2)+1 mutations
-	x = eUniRep_placeholder(np.array(s)) # eUniRep representation of the initial mutant sequence for this trajectory
+	# x = eUniRep_placeholder(np.array(s)) # eUniRep representation of the initial mutant sequence for this trajectory
+	x = get_eUniRep(s) # eUniRep representation of the initial mutant sequence for this trajectory
 	y = model_handle(x) # predicted fitness score for the initial mutant sequence for this trajectory
 
 	for i in range(num_iterations): # iterate through the trial mutation steps for the directed evolution trajectory
@@ -62,7 +77,8 @@ def directed_evolution(s_wt,num_iterations,T): # input = (wild-type sequence, nu
 		m = np.random.poisson(mu-1) + 1 # how many random mutations to apply to current sequence
 
 		s_new = mutate_sequence(s, m) # new trial sequence, produced from "m" random mutations
-		x_new = eUniRep_placeholder(np.array(s_new)) # new eUniRep representation for trial sequence
+		# x_new = eUniRep_placeholder(np.array(s_new)) # new eUniRep representation for trial sequence
+		x_new = get_eUniRep(s_new) # new eUniRep representation for trial sequence
 		y_new = model_handle(x_new) # new fitness value for trial sequence
 
 		p = min(1,np.exp((y_new-y)/T)) # probability function for trial sequence
@@ -75,44 +91,103 @@ def directed_evolution(s_wt,num_iterations,T): # input = (wild-type sequence, nu
 	return s_traj, y_traj # output = (sequence record for trajectory, fitness score recorf for trajectory)
 
 
+def run_DE_trajectories(s_wt, num_iterations, num_trajectories, model_handle):
+
+	num_trajectories = 10 # define number of trajectories to sample
+	num_iterations = 3000 # define number of trial mutagenesis steps per trajecory
+	T = 0.01 # "temperature": a mutagenesis parameter that controls rate of trial-mutation acceptance
+
+	s_records = np.zeros((num_trajectories, num_iterations, len(s_wt)))
+	y_records = np.zeros((num_trajectories, num_iterations, 1))
+
+	for i in range(num_trajectories): #iterate through however many mutation trajectories we want to sample
+		s_traj, y_traj = directed_evolution(s_wt,num_iterations,T) # call the directed evolution function, outputting the trajectory sequence and fitness score records
+
+		s_records[i] = s_traj # update the sequence trajectory records for this full mutagenesis trajectory
+		y_records[i] = y_traj # update the fitness trajectory records for this full mutagenesis trajectory
+
+
+	plt.plot(np.transpose(y_records[:,:,0])) # plot the changes in fitness for all sampled trajectories
+	plt.ylabel(r'$\Delta T_m$')
+	plt.xlabel('Mutation Steps')
+	plt.show() # cuz it is very satisfying to visualize this stuff :)
+
+	return s_records, y_records
+
+
+def shuffle(X,Y):
+	indices = np.random.permutation(np.shape(X)[0])
+	X,Y = X[indices], Y[indices]
+	return X,Y
+
+
+def calc_loss(Y_test,preds):
+	return np.linalg.norm(Y_test-preds)
+
+def validation_test(X,Y):
+	X,Y = shuffle(X,Y)
+	X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
+	Model = RidgeCV(alphas=1e3,normalize=True,cv=10).fit(X_train, Y_train) 
+
+	preds = Model.predict(X_test)
+	loss = calc_loss(Y_test,preds)
+	print('alpha: ', Model.alpha_, '  loss: ', loss)
+
+	return loss, Y_test[:,0], preds, Model.alpha_
+
+
+def plot_multiple_validation_tests(X,Y):
+
+	loss_list = []
+	alpha_list = []
+	Y_valid_data_list = []
+	Y_valid_preds_list = []
+	for i in range(20):
+		loss, Y_test, preds ,alpha= validation_test(X,Y)
+		loss_list.append(loss)
+		alpha_list.append(alpha)
+		Y_valid_data_list.extend(Y_test.tolist())
+		Y_valid_preds_list.extend(preds.tolist())
+	Y_valid_data_list, Y_valid_preds_list = (list(t) for t in zip(*sorted(zip(Y_valid_data_list, Y_valid_preds_list))))
+	plt.figure()
+	plt.plot(Y_valid_data_list,c='cyan')
+	plt.plot(Y_valid_preds_list,c='magenta')
+	plt.legend(['Data','Preds'])
+	plt.ylabel('Fitness Score')
+	plt.xlabel('Sorted mutants from random validation tests')
 
 
 
+	plt.figure()
+	plt.scatter(alpha_list,loss_list)
+	plt.xlabel('alpha')
+	plt.xscale("log")
+	plt.ylabel('loss')
+	plt.show()
 
 
-s_wt = aa_seq_to_int(get_fasta_letters("inputs/GAP38373.1.fasta")) # load wild-type sequence (integer representation)
+
+# loading data, processing data to eUniRep representation, and fitting RidgeCV model for predictive function
+s_wt = get_fasta_letters("inputs/GAP38373.1.fasta") # load wild-type sequence (integer representation)
 y_wt = 0.0 # call corresponding wild-type fitness score
-
-
 S, Y = get_SY() # load training sequences (S, integer representation) and their corresponding fitness scores (Y)
-X = eUniRep_placeholder(S) # transform training sequences to their eUniRep representation (X)
-
-
-Model = RidgeCV(alphas=[1e-6, 1e-3, 1e0, 1e3, 1e6], normalize=True, cv=10).fit(X, Y) # define the linear model to perform lasso regression with, and fit using training data
+x_wt = get_eUniRep(np.array([s_wt]))
+X = get_eUniRep(S)
+Y = Y[:,np.newaxis]
+Model = RidgeCV(normalize=True, cv=10).fit(X, Y) 
 model_handle = lambda x: Model.predict(x[np.newaxis,:]) # create a function-handle for the regression model for convenient fitness score prediction in mutation steps
 
 
-num_trajectories = 10 # define number of trajectories to sample
-num_iterations = 3000 # define number of trial mutagenesis steps per trajecory
-T = 0.01 # "temperature": a mutagenesis parameter that controls rate of trial-mutation acceptance
-
-s_records = np.zeros((num_trajectories, num_iterations, len(s_wt)))
-y_records = np.zeros((num_trajectories, num_iterations, 1))
-
-for i in range(num_trajectories): #iterate through however many mutation trajectories we want to sample
-	s_traj, y_traj = directed_evolution(s_wt,num_iterations,T) # call the directed evolution function, outputting the trajectory sequence and fitness score records
-
-	s_records[i] = s_traj # update the sequence trajectory records for this full mutagenesis trajectory
-	y_records[i] = y_traj # update the fitness trajectory records for this full mutagenesis trajectory
-
-
-plt.plot(np.transpose(y_records[:,:,0])) # plot the changes in fitness for all sampled trajectories
-plt.ylabel(r'$\Delta T_m$')
-plt.xlabel('Mutation Steps')
-plt.show() # cuz it is very satisfying to visualize this stuff :)
-
-
-
+# --------------------------------------------------------------------------------------
+# -------------------------- commands for test functions -------------------------------
+# --------------------------------------------------------------------------------------
+# 1).  To run the actual DE script:
+#		 >>>   s_records, y_records = run_DE_trajectories(s_wt, num_iterations, num_trajectories, model_handle)
+# 
+# 2). To run the validation test for fitting the model:
+#		 >>>   plot_multiple_validation_tests(X,Y)
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 
