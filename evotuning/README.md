@@ -6,3 +6,4 @@ Code snippet(s) to fetch protein sequences of proteins in the dienelactose hydro
 3. Run evotune.py to evotune [TODO: incude (out_set) validation error for stopping condition & dump weights every few thousand iterations in case of a crash or increase in validation error]
 
 Note: filter_top_100.ipynb is legacy script used when I was attempting to use jackHMMer - decided not to go forward with it.
+Note 2: NOT using tf_evotune.py - instead finished a JAX implementation of evotuning which will be used instead. 
