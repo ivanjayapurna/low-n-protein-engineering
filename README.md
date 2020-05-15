@@ -1,8 +1,14 @@
-# Low-N Protein Engineering of thermally stable PETase for ester-based plastic degradation
+# Low-N Protein Engineering
+This repository contains a complete, open-source, end-to-end re-implementation of the Church Lab's eUniRep in silico protein engineering pipeline as presented in Biswas et al. Details on our implementation can be read here [INSERT LINK TO PUBLISHED AUTHOREA], the original Church lab paper can be read here: [INSERT LINK TO LOW-N PAPER], with their repository here: [INSERT TO THEIR REPOSITORY]. The JAX-unirep re-implementation we use in our implementation can be found here: [INSERT LINK TO JAX-UNIREP].
 
-We apply the methods used in low-N protein engineering with data-efficient deep learning (Biswas et al), to do in-silico directed evolution on a wild type PETase (hydrolyzing enzyme) that can degrade ester-based plastics such as polyethylene terephthalate (PET) and ester-based polyurethanes (PU). This is done by deep learning assisted in-silico directed evolution (DE).
+## How to use:
+Each in silico step in the protein engineering pipeline has a jupyter notebook that will execute that step as well as an individual README file. The pipeline steps have been broken down as follows:
 
-Input wild-type mutants will come from Computational redesign of a PETase for plastic biodegradation by the GRAPE strategy (Cui et al), who achieve a similar goal using greedy algorithms and k-means clustering. Their results will also serve as a benchmark to compare the success the low-N in-silico DE method.
+1. Training UniRep: either use the weights provided by the Church lab [LINK THEIR REPO AGAIN] or use JAX-unirep reimplementation to re-train from scratch [LINK TO JAX-UNIREP], both are well documented for this step.
+2. Curating pre-training set for evotuning
+3. Evotuning: we pushed an example script to the jax-unirep repo [LINK IT AGAIN]
+4. Top model selection and hyperparamter tuning
+5. Markov Chain Monte Carlo (MCMC) directed evolution
+6. Additional: scripts to do further analysis such as PCA and epistasis evaluation
 
-We (hope to) show that the low-N, eUniRep method is applicable beyond just the 2 cases of proteins shown (avGFP and TEM-1 beta-lactamase) in the paper by applying the same methodology to a novel problem. Our goal is to engineer a new mutant PETase that will have greater thermal stability (melting temperature, Tm) than the wild-type we started with, while at least maintaining enzymatic activity.
-
+If you want to request any modifications / additions or want to collaborate feel free to start an issue / PR!
