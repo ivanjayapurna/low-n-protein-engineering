@@ -2,3 +2,13 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints
 unused/
+pre-evotuning/inputs/
+pre-evotuning/outputs/
+seq_mutator/inputs/
+seq_mutator/outputs/
+top-model/inputs/
+top-model/outputs/
+directed-evo/inputs/
+directed-evo/outputs/
+analysis/inputs/
+analysis/outputs/
