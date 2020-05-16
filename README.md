@@ -5,10 +5,11 @@ This repository contains a complete, open-source, end-to-end re-implementation o
 Each in silico step in the protein engineering pipeline has a jupyter notebook that will execute that step as well as an individual README file. The pipeline steps have been broken down as follows:
 
 1. Training UniRep: either use the weights provided by the [Church lab](https://github.com/churchlab/UniRep) or use the JAX-unirep reimplementation to re-train from scratch, which is well documented [here](https://github.com/ElArkk/jax-unirep)
-2. Curating pre-training set for evotuning: [pre-training]()
-3. Evotuning: we pushed an [example script](https://github.com/ElArkk/jax-unirep/blob/master/examples/evotuning.py) to the jax-unirep repo.
-4. Top model selection and hyperparamter tuning: [top-model]()
-5. Markov Chain Monte Carlo (MCMC) directed evolution: [directed-evo]()
-6. Additional: scripts to do further analysis such as PCA and epistasis evaluation: [analysis]()
+2. Generate input file of characterized mutants: [seq_mutator]()
+3. Curating pre-training set for evotuning: [pre-evotuning]()
+4. Evotuning: we pushed an [example script](https://github.com/ElArkk/jax-unirep/blob/master/examples/evotuning.py) to the jax-unirep repo.
+5. Top model selection and hyperparamter tuning: [top-model]()
+6. Markov Chain Monte Carlo (MCMC) directed evolution: [directed-evo]()
+7. Additional: scripts to do further analysis such as PCA and epistasis evaluation: [analysis]()
 
 If you want to request any modifications / additions or want to collaborate feel free to start an issue / PR!
