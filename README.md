@@ -13,3 +13,8 @@ Each in silico step in the protein engineering pipeline has a jupyter notebook t
 7. Additional: scripts to do further analysis such as PCA and epistasis evaluation: [analysis](https://github.com/ivanjayapurna/low-n-protein-engineering/tree/master/analysis)
 
 If you want to request any modifications / additions or want to collaborate feel free to start an issue / PR!
+
+## License:
+All the model weights are licensed under the terms of Creative Commons Attribution-NonCommercial 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+Otherwise the code in this repository is licensed under the terms of GPL v3.
