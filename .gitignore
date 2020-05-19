@@ -12,3 +12,5 @@ directed-evo/inputs/
 directed-evo/outputs/
 analysis/inputs/
 analysis/outputs/
+Pipfile
+Pipfile.lock
